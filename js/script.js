@@ -60,8 +60,11 @@ class MemoryButton {
 
 // button moving logic
 class ButtonBoard {
-  constructor(container) {
+  static MAX_PLACEMENT_TRIES = 100;
+
+  constructor(container, form) {
     this.container = container;
+    this.form = form; // buttons shouldn't land under this
     this.buttons = [];
   }
 
@@ -74,16 +77,40 @@ class ButtonBoard {
     }
   }
 
-  // clamp each move to window size
   scramble() {
-    const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
-
+    const placed = [this.form.getBoundingClientRect()]; // treat the textbox as already placed
     for (const button of this.buttons) {
-      const maxLeft = Math.max(0, windowWidth - button.element.offsetWidth);
-      const maxTop = Math.max(0, windowHeight - button.element.offsetHeight);
-      button.moveTo(Math.random() * maxLeft, Math.random() * maxTop);
+      const spot = this.findFreeSpot(button, placed);
+      button.moveTo(spot.left, spot.top);
+      placed.push(spot);
     }
+  }
+
+  // clamp each move to window size, retry random spots until one doesn't overlap
+  findFreeSpot(button, placed) {
+    const width = button.element.offsetWidth;
+    const height = button.element.offsetHeight;
+    const maxLeft = Math.max(0, window.innerWidth - width);
+    const maxTop = Math.max(0, window.innerHeight - height);
+
+    let spot;
+    for (let tries = 0; tries < ButtonBoard.MAX_PLACEMENT_TRIES; tries++) {
+      spot = { left: Math.random() * maxLeft, top: Math.random() * maxTop, width, height };
+      if (!placed.some((other) => ButtonBoard.overlaps(spot, other))) {
+        break;
+      }
+    }
+    return spot; // window too small? just use the last try
+  }
+
+  // rectangles overlap unless one is fully left/right/above/below the other
+  static overlaps(a, b) {
+    return (
+      a.left < b.left + b.width &&
+      b.left < a.left + a.width &&
+      a.top < b.top + b.height &&
+      b.top < a.top + a.height
+    );
   }
 
   hideNumbers() {
@@ -186,7 +213,7 @@ class GameControls {
     this.goButton = document.getElementById("goButton");
     this.message = document.getElementById("message");
 
-    const board = new ButtonBoard(document.getElementById("buttonArea"));
+    const board = new ButtonBoard(document.getElementById("buttonArea"), this.form);
     this.game = new MemoryGame(board, (text) => this.showMessage(text));
 
     document.title = MESSAGES.PAGE_TITLE;
