@@ -1,0 +1,41 @@
+/* claude also generated this */
+
+body {
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  padding: 1rem;
+}
+
+#controls {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+}
+
+#countLabel {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+#message {
+  min-height: 1.5em;
+  font-weight: bold;
+}
+
+#buttonArea {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1em;
+}
+
+.memory-button {
+  width: 10em;
+  height: 5em;
+  font-size: 1rem;
+  border: 1px solid #555;
+  cursor: default;
+}
+
+.memory-button.clickable {
+  cursor: pointer;
+}
